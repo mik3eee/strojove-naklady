@@ -13,7 +13,7 @@ def load_data():
 
 df = load_data()
 
-# Vytvoríme si predvolené zoznamy pre multiselect, zoradené ako string
+# Prepare sorted lists
 podnik_list    = sorted(df["Podnik"].dropna().unique(), key=lambda x: str(x))
 kategoria_list = sorted(df["Kategoria"].dropna().unique(), key=lambda x: str(x))
 funkcny_list   = sorted(df["Funkčný"].dropna().unique(), key=lambda x: str(x))
@@ -30,21 +30,20 @@ with st.sidebar:
     rok_uc    = st.multiselect("ROK_UC", rok_uc_list)
     pl2       = st.multiselect("PL2", pl2_list)
 
-    rok_from, rok_to = st.slider(
-        "ROK výroba",
-        int(df["ROK_vyroba"].min()),
-        int(df["ROK_vyroba"].max()),
-        (int(df["ROK_vyroba"].min()), int(df["ROK_vyroba"].max()))
-    )
-    mh_from, mh_to = st.slider(
-        "Motohodiny",
-        int(df["motohodiny"].min()),
-        int(df["motohodiny"].max()),
-        (int(df["motohodiny"].min()), int(df["motohodiny"].max()))
-    )
+    # Replace sliders with number_input for Typing values
+    min_rok = int(df["ROK_vyroba"].min())
+    max_rok = int(df["ROK_vyroba"].max())
+    rok_from = st.number_input("Rok výroba od", min_value=min_rok, max_value=max_rok, value=min_rok, step=1)
+    rok_to   = st.number_input("Rok výroba do", min_value=min_rok, max_value=max_rok, value=max_rok, step=1)
+
+    min_mh = int(df["motohodiny"].min())
+    max_mh = int(df["motohodiny"].max())
+    mh_from = st.number_input("Motohodiny od", min_value=min_mh, max_value=max_mh, value=min_mh, step=1)
+    mh_to   = st.number_input("Motohodiny do", min_value=min_mh, max_value=max_mh, value=max_mh, step=1)
+
     size_max = st.slider("Maximálna veľkosť bublín", 10, 100, 40)
 
-# Aplikácia filtrov
+# Apply filters
 dff = df.copy()
 if podnik:    dff = dff[dff["Podnik"].isin(podnik)]
 if kategoria: dff = dff[dff["Kategoria"].isin(kategoria)]
@@ -55,14 +54,14 @@ if pl2:       dff = dff[dff["PL2"].isin(pl2)]
 dff = dff[(dff["ROK_vyroba"] >= rok_from) & (dff["ROK_vyroba"] <= rok_to)]
 dff = dff[(dff["motohodiny"] >= mh_from) & (dff["motohodiny"] <= mh_to)]
 
-# Agregácia dát
+# Aggregate data
 grouped = (
     dff
     .groupby(["Popis","Podnik","ROK_vyroba","motohodiny"], as_index=False)
     .agg(EUR_sum=("EUR","sum"))
 )
 
-# Vykreslenie bublinového grafu
+# Plot
 fig = px.scatter(
     grouped,
     x="ROK_vyroba",
@@ -73,9 +72,6 @@ fig = px.scatter(
     size_max=size_max,
     title="Bublinový graf nákladov strojov"
 )
-fig.update_layout(
-    xaxis_title="Rok výroba",
-    yaxis_title="Motohodiny"
-)
+fig.update_layout(xaxis_title="Rok výroba", yaxis_title="Motohodiny")
 
 st.plotly_chart(fig, use_container_width=True)
