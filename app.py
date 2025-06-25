@@ -13,13 +13,13 @@ def load_data():
 
 df = load_data()
 
-# Vytvoríme si predradené zoznamy s key=str, aby sa nekryl str vs int
-podnik_list   = sorted(df["Podnik"].dropna().unique(), key=lambda x: str(x))
+# Vytvoríme si predvolené zoznamy pre multiselect, zoradené ako string
+podnik_list    = sorted(df["Podnik"].dropna().unique(), key=lambda x: str(x))
 kategoria_list = sorted(df["Kategoria"].dropna().unique(), key=lambda x: str(x))
-funkcny_list  = sorted(df["Funkčný"].dropna().unique(), key=lambda x: str(x))
-skupina_list  = sorted(df["Skupina"].dropna().unique(), key=lambda x: str(x))
-rok_uc_list   = sorted(df["ROK_UC"].dropna().unique(), key=lambda x: str(x))
-pl2_list      = sorted(df["PL2"].dropna().unique(), key=lambda x: str(x))
+funkcny_list   = sorted(df["Funkčný"].dropna().unique(), key=lambda x: str(x))
+skupina_list   = sorted(df["Skupina"].dropna().unique(), key=lambda x: str(x))
+rok_uc_list    = sorted(df["ROK_UC"].dropna().unique(), key=lambda x: str(x))
+pl2_list       = sorted(df["PL2"].dropna().unique(), key=lambda x: str(x))
 
 with st.sidebar:
     st.header("Filtre")
@@ -44,7 +44,7 @@ with st.sidebar:
     )
     size_max = st.slider("Maximálna veľkosť bublín", 10, 100, 40)
 
-# Aplikujeme filtre
+# Aplikácia filtrov
 dff = df.copy()
 if podnik:    dff = dff[dff["Podnik"].isin(podnik)]
 if kategoria: dff = dff[dff["Kategoria"].isin(kategoria)]
@@ -55,14 +55,14 @@ if pl2:       dff = dff[dff["PL2"].isin(pl2)]
 dff = dff[(dff["ROK_vyroba"] >= rok_from) & (dff["ROK_vyroba"] <= rok_to)]
 dff = dff[(dff["motohodiny"] >= mh_from) & (dff["motohodiny"] <= mh_to)]
 
-# Agregácia
+# Agregácia dát
 grouped = (
     dff
     .groupby(["Popis","Podnik","ROK_vyroba","motohodiny"], as_index=False)
     .agg(EUR_sum=("EUR","sum"))
 )
 
-# Bublinový graf
+# Vykreslenie bublinového grafu
 fig = px.scatter(
     grouped,
     x="ROK_vyroba",
@@ -73,6 +73,9 @@ fig = px.scatter(
     size_max=size_max,
     title="Bublinový graf nákladov strojov"
 )
-fig.update_layout(xaxis_title="Rok výroba", yaxis_title="Motohodiny")
+fig.update_layout(
+    xaxis_title="Rok výroba",
+    yaxis_title="Motohodiny"
+)
 
 st.plotly_chart(fig, use_container_width=True)
